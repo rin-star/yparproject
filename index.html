@@ -8,21 +8,20 @@
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="mario-elements">
+    <div class="scene-elements">
+        <div class="sun"></div>
         <div class="cloud cloud1"></div>
         <div class="cloud cloud2"></div>
-        <div class="pipe pipe1"></div>
-        <div class="pipe pipe2"></div>
-        <div class="brick brick1"></div>
-        <div class="brick brick2"></div>
-        <div class="brick brick3"></div>
+        <div class="cloud cloud3"></div>
     </div>
     
     <div class="game-world">
-        <div id="player" class="player">M</div>
-        <div id="monsters"></div>
+        <div id="player" class="player"></div>
+        <div id="blocks"></div>
     </div>
     
+    <div class="top-counter">coins: <span id="coin-count">0</span></div>
+
     <div class="container">
         <header>
             <h1>KOREAN QUEST</h1>
@@ -33,7 +32,13 @@
         <div id="progress-bar">
             <div id="progress-fill"></div>
         </div>
-        
+
+        <div class="controls">
+            <div class="key-guide"><span class="key">←</span><span class="key">→</span> move</div>
+            <div class="key-guide"><span class="key">↑</span><span class="key">space</span> jump</div>
+            <div class="key-guide">fill this box with flowers to answer</div>
+        </div>
+
         <div id="game-area">
             <div id="start-screen">
                 <h2>WELCOME, EXPLORER!</h2>
@@ -46,6 +51,10 @@
                     <div class="character" id="question-character">Question Master</div>
                     <h3 id="question"></h3>
                     <div id="options"></div>
+                    <div id="coin-box" class="coin-box hidden">
+                        <div class="coin-icon">🪙</div>
+                        <p>tap the coin to collect it</p>
+                    </div>
                 </div>
                 <div id="feedback" class="hidden bounce-in">
                     <div class="character" id="feedback-character"></div>

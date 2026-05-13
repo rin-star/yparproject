@@ -59,9 +59,11 @@ const questions = [
 
 let currentQuestionIndex = 0;
 let score = 0;
+let coins = 0;
 let selectedOption = null;
 let playerPosition = 50; // percentage from left
-let monsters = [];
+let blocks = [];
+let currentBlock = null;
 let keys = {};
 
 const startBtn = document.getElementById('start-btn');
@@ -78,21 +80,31 @@ const restartBtn = document.getElementById('restart-btn');
 const resultMessage = document.getElementById('result-message');
 const scoreDisplay = document.getElementById('score-display');
 const progressFill = document.getElementById('progress-fill');
+const coinCountDisplay = document.getElementById('coin-count');
+const coinBox = document.getElementById('coin-box');
+const questionContainer = document.getElementById('question-container');
 const mainCharacter = document.getElementById('main-character');
 const questionCharacter = document.getElementById('question-character');
 const resultCharacter = document.getElementById('result-character');
 const player = document.getElementById('player');
-const monstersContainer = document.getElementById('monsters');
+const blocksContainer = document.getElementById('blocks');
 const particlesContainer = document.getElementById('particles');
 
 startBtn.addEventListener('click', startGame);
 nextBtn.addEventListener('click', nextQuestion);
 restartBtn.addEventListener('click', restartGame);
+coinBox.addEventListener('click', collectCoin);
 
 // Keyboard controls
 document.addEventListener('keydown', (e) => {
     keys[e.key] = true;
-    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+
+    if (e.key === 'ArrowUp' || e.key === ' ') {
+        e.preventDefault();
+        jumpPlayer();
+    }
+
+    if (['ArrowLeft', 'ArrowRight'].includes(e.key)) {
         e.preventDefault();
         movePlayer();
     }
@@ -102,9 +114,30 @@ document.addEventListener('keyup', (e) => {
     keys[e.key] = false;
 });
 
+let isJumping = false;
+
+function jumpPlayer() {
+    if (isJumping || !startScreen.classList.contains('hidden') || !resultScreen.classList.contains('hidden')) {
+        return;
+    }
+
+    isJumping = true;
+    const baseBottom = 20;
+    const jumpHeight = 90;
+
+    player.style.bottom = `${baseBottom + jumpHeight}px`;
+
+    setTimeout(() => {
+        player.style.bottom = `${baseBottom}px`;
+        setTimeout(() => {
+            isJumping = false;
+            checkCollisions();
+        }, 200);
+    }, 300);
+}
+
 function movePlayer() {
-    // Only allow movement when not answering questions
-    if (!questionScreen.classList.contains('hidden') || !resultScreen.classList.contains('hidden')) {
+    if (!startScreen.classList.contains('hidden') || !resultScreen.classList.contains('hidden')) {
         return;
     }
     
@@ -119,45 +152,61 @@ function movePlayer() {
     
     player.style.left = playerPosition + '%';
     
-    // Check for monster collisions
+    // Check for question-block collisions
     checkCollisions();
 }
 
 function checkCollisions() {
-    monsters.forEach((monster, index) => {
-        const monsterRect = monster.getBoundingClientRect();
+    if (!questionScreen.classList.contains('hidden') || !startScreen.classList.contains('hidden') || !resultScreen.classList.contains('hidden')) {
+        return;
+    }
+
+    blocks.forEach((block) => {
+        if (block.dataset.triggered === 'true') {
+            return;
+        }
+
+        const blockRect = block.getBoundingClientRect();
         const playerRect = player.getBoundingClientRect();
-        
-        if (playerRect.left < monsterRect.right && 
-            playerRect.right > monsterRect.left && 
-            playerRect.top < monsterRect.bottom && 
-            playerRect.bottom > monsterRect.top) {
-            // Collision detected - trigger question
-            if (questionScreen.classList.contains('hidden')) {
-                showQuestion();
-            }
+        const horizontalOverlap = playerRect.left < blockRect.right && playerRect.right > blockRect.left;
+        const isAboveBlock = playerRect.bottom < blockRect.bottom - 8;
+
+        if (horizontalOverlap && isAboveBlock) {
+            currentBlock = block;
+            block.dataset.triggered = 'true';
+            showQuestion();
         }
     });
 }
 
-function spawnMonster() {
-    const monster = document.createElement('div');
-    monster.className = 'monster';
-    monster.textContent = '👹';
-    monster.style.left = Math.random() * 80 + 10 + '%';
-    monster.style.bottom = Math.random() * 30 + 10 + '%';
-    monstersContainer.appendChild(monster);
-    monsters.push(monster);
+function spawnQuestionBlock() {
+    const block = document.createElement('div');
+    block.className = 'question-block';
+    block.dataset.triggered = 'false';
+    block.style.left = Math.random() * 82 + 8 + '%';
+    block.style.bottom = Math.random() * 45 + 10 + '%';
+    block.innerHTML = '<span>🌸</span>';
+    blocksContainer.appendChild(block);
+    blocks.push(block);
 }
 
-function defeatMonster() {
-    if (monsters.length > 0) {
-        const monster = monsters.shift();
-        monster.classList.add('defeated');
-        setTimeout(() => {
-            monster.remove();
-        }, 500);
-    }
+function spawnFlower() {
+    const flower = document.createElement('div');
+    flower.className = 'flower-item';
+    flower.style.left = Math.random() * 86 + 5 + '%';
+    flower.style.bottom = Math.random() * 74 + 8 + '%';
+    flower.innerHTML = '<span>🌸</span>';
+    blocksContainer.appendChild(flower);
+}
+
+function clearBlock() {
+    if (!currentBlock) return;
+    currentBlock.classList.add('inactive');
+    setTimeout(() => {
+        currentBlock.remove();
+        blocks = blocks.filter((block) => block !== currentBlock);
+        currentBlock = null;
+    }, 300);
 }
 
 function startGame() {
@@ -169,13 +218,13 @@ function startGame() {
     playerPosition = 50;
     player.style.left = '50%';
     
-    // Clear existing monsters
-    monsters.forEach(monster => monster.remove());
-    monsters = [];
+    // Clear existing blocks
+    blocks.forEach((block) => block.remove());
+    blocks = [];
     
-    // Spawn initial monsters
-    for (let i = 0; i < 3; i++) {
-        spawnMonster();
+    // Spawn initial question blocks
+    for (let i = 0; i < 5; i++) {
+        spawnQuestionBlock();
     }
     
     // Start game loop
@@ -193,8 +242,12 @@ function showQuestion() {
     questionEl.textContent = question.question;
     questionCharacter.textContent = question.character;
     optionsEl.innerHTML = '';
+    optionsEl.classList.remove('hidden');
+    feedbackEl.classList.remove('correct', 'incorrect');
     feedbackEl.classList.add('hidden');
     nextBtn.classList.add('hidden');
+    questionContainer.classList.remove('coin-mode');
+    coinBox.classList.add('hidden');
     
     question.options.forEach((option, index) => {
         const optionEl = document.createElement('div');
@@ -222,12 +275,14 @@ function selectOption(index) {
     
     if (index === question.correct) {
         score++;
-        feedbackCharacter.textContent = 'Correct!';
+        feedbackCharacter.textContent = 'correct!';
         feedbackText.textContent = question.fact;
         feedbackEl.classList.add('correct');
         createParticles();
-        defeatMonster();
-        mainCharacter.textContent = 'Happy Guide';
+        clearBlock();
+        spawnFlower();
+        showCoinReward();
+        mainCharacter.textContent = 'happy guide';
     } else {
         feedbackCharacter.textContent = 'Oops!';
         feedbackText.textContent = question.fact;
@@ -243,11 +298,14 @@ function selectOption(index) {
 function nextQuestion() {
     selectedOption = null;
     currentQuestionIndex++;
+    coinBox.classList.add('hidden');
+    questionContainer.classList.remove('coin-mode');
+    currentBlock = null;
     
     if (currentQuestionIndex < questions.length) {
         showQuestion();
-        // Spawn a new monster
-        spawnMonster();
+        // Spawn a new block
+        spawnQuestionBlock();
     } else {
         showResult();
     }
@@ -284,18 +342,41 @@ function showResult() {
 function restartGame() {
     resultScreen.classList.add('hidden');
     startScreen.classList.remove('hidden');
-    mainCharacter.textContent = 'Adventure Guide';
+    mainCharacter.textContent = 'adventure guide';
     playerPosition = 50;
     player.style.left = '50%';
-    monsters.forEach(monster => monster.remove());
-    monsters = [];
+    blocks.forEach((block) => block.remove());
+    blocks = [];
     currentQuestionIndex = 0;
     score = 0;
+    coins = 0;
+    coinCountDisplay.textContent = coins;
 }
 
 function updateProgress() {
     const progress = ((currentQuestionIndex + (selectedOption !== null ? 1 : 0)) / questions.length) * 100;
     progressFill.style.width = `${progress}%`;
+}
+
+function showCoinReward() {
+    questionEl.textContent = 'the question box turned into a coin!';
+    optionsEl.classList.add('hidden');
+    coinBox.classList.remove('hidden');
+    questionContainer.classList.add('coin-mode');
+    coinBox.querySelector('p').textContent = 'tap the coin to collect it';
+}
+
+function collectCoin() {
+    if (coinBox.classList.contains('hidden')) {
+        return;
+    }
+
+    coins += 1;
+    coinCountDisplay.textContent = coins;
+    coinBox.classList.add('hidden');
+    questionContainer.classList.remove('coin-mode');
+    feedbackText.textContent = `you collected a coin! you now have ${coins} coins.`;
+    feedbackText.style.color = '#2a7f5f';
 }
 
 function createParticles() {
