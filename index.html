@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Korean Culture Adventure</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="mario-elements">
+        <div class="cloud cloud1"></div>
+        <div class="cloud cloud2"></div>
+        <div class="pipe pipe1"></div>
+        <div class="pipe pipe2"></div>
+        <div class="brick brick1"></div>
+        <div class="brick brick2"></div>
+        <div class="brick brick3"></div>
+    </div>
+    
+    <div class="game-world">
+        <div id="player" class="player">M</div>
+        <div id="monsters"></div>
+    </div>
+    
+    <div class="container">
+        <header>
+            <h1>KOREAN QUEST</h1>
+            <p>Embark on an epic journey through Korea's wonders!</p>
+            <div class="character" id="main-character">Adventure Guide</div>
+        </header>
+        
+        <div id="progress-bar">
+            <div id="progress-fill"></div>
+        </div>
+        
+        <div id="game-area">
+            <div id="start-screen">
+                <h2>WELCOME, EXPLORER!</h2>
+                <p>Answer questions to unlock Korea's secrets and collect wisdom points!</p>
+                <button id="start-btn" class="bounce">START QUEST</button>
+            </div>
+            
+            <div id="question-screen" class="hidden slide-in">
+                <div id="question-container">
+                    <div class="character" id="question-character">Question Master</div>
+                    <h3 id="question"></h3>
+                    <div id="options"></div>
+                </div>
+                <div id="feedback" class="hidden bounce-in">
+                    <div class="character" id="feedback-character"></div>
+                    <p id="feedback-text"></p>
+                </div>
+                <button id="next-btn" class="hidden pulse">CONTINUE</button>
+            </div>
+            
+            <div id="result-screen" class="hidden slide-in">
+                <h2>QUEST COMPLETE!</h2>
+                <div class="character" id="result-character">Achievement</div>
+                <p id="result-message"></p>
+                <div id="final-score">Wisdom Points: <span id="score-display"></span></div>
+                <button id="restart-btn" class="bounce">RESTART</button>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Discover the magic of Korean culture!</p>
+        </footer>
+    </div>
+    
+    <div id="particles" class="hidden"></div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
